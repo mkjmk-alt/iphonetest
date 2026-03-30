@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>홍콩 여행 지도</title>
+<style>
+:root{--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);--bg:#0d1b2a;--card:#1a2a3a;--bdr:#243547;--gold:#FFD700;--sub:#8fa3b1}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:-apple-system,'Malgun Gothic',sans-serif;color:#fff}
+#map{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1}
+/* Leaflet 내장 CSS */
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-tile-container,.leaflet-map-pane svg,.leaflet-map-pane canvas,.leaflet-zoom-box,.leaflet-image-layer,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden}
+.leaflet-tile,.leaflet-marker-icon,.leaflet-marker-shadow{-webkit-user-select:none;user-select:none;-webkit-user-drag:none}
+.leaflet-tile::selection{background:transparent}
+.leaflet-tile::-moz-selection{background:transparent}
+.leaflet-image-layer,.leaflet-layer,.leaflet-marker-shadow{pointer-events:none!important}
+.leaflet-pane{z-index:400}
+.leaflet-tile-pane{z-index:200}
+.leaflet-overlay-pane{z-index:400}
+.leaflet-shadow-pane{z-index:500}
+.leaflet-marker-pane{z-index:600}
+.leaflet-tooltip-pane{z-index:650}
+.leaflet-popup-pane{z-index:700}
+.leaflet-map-pane canvas{z-index:100}
+.leaflet-map-pane svg{z-index:200}
+.leaflet-zoom-animated{-webkit-transform-origin:left top;transform-origin:left top}
+.leaflet-zoom-animated{transition:-webkit-transform .25s cubic-bezier(0,0,.25,1);transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-pan-animated{transition:left .25s,top .25s}
+.leaflet-container{background:#303030;outline-offset:1px;-webkit-tap-highlight-color:transparent}
+.leaflet-container a.leaflet-active{outline:2px solid orange}
+.leaflet-zoom-box{border:2px dotted #38f;background:rgba(255,255,255,.5)}
+.leaflet-control{position:relative;z-index:800;pointer-events:visiblePainted;pointer-events:auto}
+.leaflet-top,.leaflet-bottom{position:absolute;z-index:1000;pointer-events:none}
+.leaflet-top{top:0}.leaflet-right{right:0}.leaflet-bottom{bottom:0}.leaflet-left{left:0}
+.leaflet-control{float:left;clear:both}.leaflet-right .leaflet-control{float:right}
+.leaflet-top .leaflet-control{margin-top:10px}.leaflet-bottom .leaflet-control{margin-bottom:10px}
+.leaflet-left .leaflet-control{margin-left:10px}.leaflet-right .leaflet-control{margin-right:10px}
+.leaflet-fade-anim .leaflet-popup{opacity:0;transition:opacity .2s linear}.leaflet-fade-anim .leaflet-map-pane .leaflet-popup{opacity:1}
+.leaflet-zoom-animated .leaflet-zoom-hide{visibility:hidden}
+.leaflet-control-zoom a,.leaflet-bar a{background-color:#fff;border-bottom:1px solid #ccc;width:26px;height:26px;line-height:26px;display:block;text-align:center;text-decoration:none;color:black}
+.leaflet-touch .leaflet-control-zoom a,.leaflet-touch .leaflet-bar a{width:30px;height:30px;line-height:30px}
+.leaflet-bar a:hover,.leaflet-bar a:focus{background-color:#f4f4f4}
+.leaflet-bar a:first-child{border-top-left-radius:4px;border-top-right-radius:4px}
+.leaflet-bar a:last-child{border-bottom-left-radius:4px;border-bottom-right-radius:4px;border-bottom:none}
+.leaflet-bar a.leaflet-disabled{cursor:default;background-color:#f4f4f4;color:#bbb}
+.leaflet-touch .leaflet-bar{box-shadow:none;border:2px solid rgba(0,0,0,.2)}
+.leaflet-control-zoom-in,.leaflet-control-zoom-out{font:bold 18px 'Lucida Console',Monaco,monospace;text-indent:1px}
+.leaflet-touch .leaflet-control-zoom-in{font-size:22px}.leaflet-touch .leaflet-control-zoom-out{font-size:20px}
+.leaflet-control-attribution{background:rgba(255,255,255,.7);margin:0}.leaflet-control-attribution.leaflet-control{padding:0 5px;font-size:11px}
+.leaflet-left .leaflet-control-scale{margin-left:5px}.leaflet-bottom .leaflet-control-scale{margin-bottom:5px}
+.leaflet-control-scale-line{border:2px solid #777;border-top:none;line-height:1.1;padding:2px 5px 1px;font-size:11px;white-space:nowrap;overflow:hidden;box-sizing:border-box;background:rgba(255,255,255,.5)}
+.leaflet-control-scale-line:not(:first-child){border-top:2px solid #777;border-bottom:none;margin-top:-2px}
+.leaflet-popup{position:absolute;text-align:center;margin-bottom:20px}
+.leaflet-popup-content-wrapper{padding:1px;text-align:left;border-radius:12px}
+.leaflet-popup-tip-container{width:40px;height:20px;position:absolute;left:50%;margin-left:-20px;overflow:hidden;pointer-events:none}
+.leaflet-popup-tip{width:17px;height:17px;padding:1px;margin:-10px auto 0;pointer-events:auto;transform:rotate(45deg)}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:white;color:#333;box-shadow:0 3px 14px rgba(0,0,0,.4)}
+.leaflet-container a.leaflet-popup-close-button{position:absolute;top:0;right:0;border:none;text-align:center;width:24px;height:24px;font:16px/24px Tahoma,Verdana,sans-serif;color:#757575;text-decoration:none;background:transparent}
+.leaflet-container a.leaflet-popup-close-button:hover,.leaflet-container a.leaflet-popup-close-button:focus{color:#585858}
+.leaflet-popup-scrolled{overflow:auto}
+.leaflet-popup-content{margin:13px 19px 13px 20px!important;line-height:1.3}
+.leaflet-marker-icon,.leaflet-marker-shadow{display:block}
+img.leaflet-image-layer,img.leaflet-tile{max-width:none!important;max-height:none!important;width:auto;padding:0}
+.leaflet-div-icon{background:#fff;border:1px solid #666}
+/* 헤더 */
+#hd{position:fixed;top:0;left:0;right:0;z-index:800;background:rgba(13,27,42,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:calc(var(--st) + 10px) 14px 10px;border-bottom:1px solid var(--bdr)}
+#hd-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+#hd-top h1{font-size:15px;font-weight:800}
+#hd-top h1 span{color:var(--gold)}
+#badge{background:var(--gold);color:#000;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px}
+#dscroll{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+#dscroll::-webkit-scrollbar{display:none}
+.dp{flex-shrink:0;padding:6px 12px;border-radius:18px;border:2px solid transparent;font-size:11px;font-weight:700;color:#fff;line-height:1.4;text-align:center;cursor:pointer}
+.dp.on{border-color:rgba(255,255,255,.85);box-shadow:0 0 8px rgba(255,255,255,.2)}
+/* 바텀시트 */
+#sh{position:fixed;left:0;right:0;bottom:0;z-index:800;background:var(--card);border-radius:20px 20px 0 0;border-top:1px solid var(--bdr);display:flex;flex-direction:column;max-height:85vh;padding-bottom:var(--sb);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+#sh.c{transform:translateY(calc(100% - 70px))}
+#sh.h{transform:translateY(40%)}
+#sh.f{transform:translateY(0)}
+#sha{padding:10px 0 0;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;flex-shrink:0}
+#hbar{width:36px;height:4px;background:var(--bdr);border-radius:2px}
+#shh{display:flex;align-items:center;justify-content:space-between;padding:0 16px 8px;flex-shrink:0}
+#sht{font-size:13px;font-weight:700}
+#shc{font-size:12px;color:var(--gold);font-weight:700}
+#crow{display:flex;gap:7px;padding:0 14px 9px;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+#crow::-webkit-scrollbar{display:none}
+.cp{flex-shrink:0;padding:5px 12px;border-radius:14px;border:1.5px solid var(--bdr);font-size:12px;font-weight:600;background:transparent;color:var(--sub);cursor:pointer}
+.cp.on{border-color:var(--gold);color:var(--gold);background:rgba(255,215,0,.07)}
+#pl{flex:1;overflow-y:auto;padding:0 12px 10px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#pl::-webkit-scrollbar{display:none}
+.dl{font-size:11px;font-weight:800;padding:9px 3px 5px;display:flex;align-items:center;gap:6px;position:sticky;top:0;background:var(--card);z-index:2}
+.dd{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pc{display:flex;align-items:flex-start;gap:10px;padding:10px 11px;margin-bottom:5px;background:rgba(255,255,255,.04);border-radius:12px;border:1px solid var(--bdr);cursor:pointer}
+.pc:active{background:rgba(255,255,255,.1)}
+.pi{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.pn{font-size:13px;font-weight:700;line-height:1.3;margin-bottom:3px}
+.pm{display:flex;gap:5px;flex-wrap:wrap}
+.pt{font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px}
+.pd{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.5}
+.pa{color:var(--sub);font-size:18px;flex-shrink:0;margin-top:1px}
+/* FAB */
+.fab{position:fixed;right:14px;z-index:810;width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;box-shadow:0 3px 14px rgba(0,0,0,.5)}
+#fb1{bottom:calc(78px + var(--sb))}
+#fb2{bottom:calc(130px + var(--sb))}
+/* 팝업 */
+.leaflet-popup-content-wrapper{background:#1a2a3a!important;color:#fff!important;border-radius:14px!important;border:1px solid #243547!important;box-shadow:0 8px 32px rgba(0,0,0,.6)!important}
+.leaflet-popup-tip{background:#1a2a3a!important}
+.pt2{font-size:14px;font-weight:800;margin-bottom:6px;line-height:1.3}
+.pb{padding:2px 9px;border-radius:9px;font-size:11px;font-weight:700;display:inline-block;margin-right:4px;margin-bottom:2px}
+.pdesc{font-size:12px;color:#8fa3b1;line-height:1.6;margin-top:5px}
+/* 검색 */
+#so{position:fixed;inset:0;z-index:900;background:rgba(13,27,42,.98);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);display:none;flex-direction:column;padding-top:calc(var(--st) + 12px);padding-bottom:var(--sb)}
+#so.open{display:flex}
+#stop{display:flex;align-items:center;gap:10px;padding:0 14px 12px}
+#si{flex:1;background:var(--card);border:1px solid var(--bdr);border-radius:12px;padding:11px 14px;color:#fff;font-size:15px;outline:none;-webkit-appearance:none;-webkit-border-radius:12px}
+#si::placeholder{color:var(--sub)}
+#sc{color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+#sr{flex:1;overflow-y:auto;padding:0 12px;-webkit-overflow-scrolling:touch}
+#sr::-webkit-scrollbar{display:none}
+.sh{padding:10px 4px;font-size:12px;color:var(--sub)}
+/* 범례 */
+#lp{position:fixed;bottom:calc(130px + var(--sb));right:66px;z-index:810;background:rgba(26,42,58,.97);border:1px solid var(--bdr);border-radius:14px;padding:12px 14px;display:none;backdrop-filter:blur(12px);max-width:195px}
+#lp.open{display:block}
+.lt{font-size:11px;font-weight:800;color:var(--gold);margin-bottom:7px}
+.lr{display:flex;align-items:center;gap:7px;font-size:11px;margin-bottom:3px}
+.ld{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<div id="hd">
+  <div id="hd-top">
+    <h1>🗺️ 홍콩 5박 6일 <span>완전 정복</span></h1>
+    <div id="badge">106곳</div>
+  </div>
+  <div id="dscroll">
+    <button class="dp on" style="background:#3d4f5c" onclick="fDay(0)">🗺️ 전체</button>
+    <button class="dp" style="background:#E74C3C" onclick="fDay(1)">Day 1<br><span style="font-size:9px;opacity:.85">침사추이</span></button>
+    <button class="dp" style="background:#E67E22" onclick="fDay(2)">Day 2<br><span style="font-size:9px;opacity:.85">홍콩섬</span></button>
+    <button class="dp" style="background:#27AE60" onclick="fDay(3)">Day 3<br><span style="font-size:9px;opacity:.85">란타우</span></button>
+    <button class="dp" style="background:#2980B9" onclick="fDay(4)">Day 4<br><span style="font-size:9px;opacity:.85">몽콕</span></button>
+    <button class="dp" style="background:#8E44AD" onclick="fDay(5)">Day 5<br><span style="font-size:9px;opacity:.85">포토스팟</span></button>
+    <button class="dp" style="background:#16A085" onclick="fDay(6)">Day 6<br><span style="font-size:9px;opacity:.85">위안랑</span></button>
+    <button class="dp" style="background:#C0392B" onclick="fDay(7)">🎰 마카오<br><span style="font-size:9px;opacity:.85">보너스</span></button>
+  </div>
+</div>
+
+<div id="sh" class="c">
+  <div id="sha" onclick="cyc()">
+    <div id="hbar"></div>
+    <div id="shh"><div id="sht">📍 전체 장소</div><div id="shc">106곳 ↑</div></div>
+  </div>
+  <div id="crow">
+    <button class="cp on" onclick="fCat('',event)">전체</button>
+    <button class="cp" onclick="fCat('관광',event)">🏛️ 관광</button>
+    <button class="cp" onclick="fCat('맛집',event)">🍜 맛집</button>
+    <button class="cp" onclick="fCat('야경',event)">🌃 야경</button>
+  </div>
+  <div id="pl"></div>
+</div>
+
+<div id="fb2" class="fab" onclick="tLeg()">🎨</div>
+<div id="fb1" class="fab" onclick="oSrc()">🔍</div>
+
+<div id="lp">
+  <div class="lt">📅 일차별 색상</div>
+  <div class="lr"><div class="ld" style="background:#E74C3C"></div>Day 1 침사추이·구룡</div>
+  <div class="lr"><div class="ld" style="background:#E67E22"></div>Day 2 홍콩섬 센트럴</div>
+  <div class="lr"><div class="ld" style="background:#27AE60"></div>Day 3 란타우 섬</div>
+  <div class="lr"><div class="ld" style="background:#2980B9"></div>Day 4 구룡 동부·몽콕</div>
+  <div class="lr"><div class="ld" style="background:#8E44AD"></div>Day 5 포토스팟·남부</div>
+  <div class="lr"><div class="ld" style="background:#16A085"></div>Day 6 위안랑·귀국</div>
+  <div class="lr"><div class="ld" style="background:#C0392B"></div>🎰 보너스 마카오</div>
+  <div class="lt" style="margin-top:8px">🏷️ 카테고리</div>
+  <div class="lr">🏛️ 관광명소</div>
+  <div class="lr">🍜 맛집·카페</div>
+  <div class="lr">🌃 야경·나이트</div>
+</div>
+
+<div id="so">
+  <div id="stop">
+    <input id="si" type="search" placeholder="🔍 장소, 음식, 지역 검색..." oninput="dSrc()" autocomplete="off" autocorrect="off" spellcheck="false">
+    <div id="sc" onclick="cSrc()">취소</div>
+  </div>
+  <div id="sr"><div class="sh">예: 딤섬 · 야경 · 미슐랭 · 마카오</div></div>
+</div>
+
+<!-- Leaflet JS (인라인 스크립트 다음에 로드) -->
+<script>
+/* ─── 데이터 ─── */
+const L_DATA=[{"name": "홍콩 우주박물관", "lat": 22.2948, "lng": 114.1718, "day": 1, "cat": "관광", "desc": "달걀 돔 형태의 독특한 건물, 무료 입장 가능"}, {"name": "1881 헤리티지", "lat": 22.2951, "lng": 114.1724, "day": 1, "cat": "관광", "desc": "과거 영국 해군 건물을 럭셔리 쇼핑몰로 개조"}, {"name": "스타의 거리", "lat": 22.2935, "lng": 114.1743, "day": 1, "cat": "관광", "desc": "이소룡 동상 & 홍콩 영화계 스타 핸드프린트"}, {"name": "스타페리 선착장", "lat": 22.2937, "lng": 114.1687, "day": 1, "cat": "관광", "desc": "홍콩섬 왕복 페리, 편도 HKD 3.4"}, {"name": "네이선 로드", "lat": 22.3012, "lng": 114.172, "day": 1, "cat": "관광", "desc": "침사추이 대표 쇼핑 거리"}, {"name": "SKY100 전망대", "lat": 22.303, "lng": 114.1609, "day": 1, "cat": "관광", "desc": "ICC 100층 전망대, 낮 전경 감상"}, {"name": "구룡 성벽 도시 공원", "lat": 22.3317, "lng": 114.19, "day": 1, "cat": "관광", "desc": "과거 세계 최고 인구밀도 지역, 현재 청나라식 정원"}, {"name": "홍콩 붓 박물관", "lat": 22.307, "lng": 114.172, "day": 1, "cat": "관광", "desc": "중국 전통 붓 제작·서예 문화 체험, 인기 포토스팟"}, {"name": "팀호완", "lat": 22.2996, "lng": 114.1718, "day": 1, "cat": "맛집", "desc": "세계에서 가장 저렴한 미슐랭 1스타 딤섬"}, {"name": "얏퉁힌", "lat": 22.306, "lng": 114.1681, "day": 1, "cat": "맛집", "desc": "9년 연속 미슐랭 1스타 광둥 딤섬, 이튼 호텔 지하"}, {"name": "원딤섬", "lat": 22.3245, "lng": 114.1731, "day": 1, "cat": "맛집", "desc": "HKD 25 초가성비 딤섬, 현지인 줄서는 곳"}, {"name": "심포니 오브 라이트", "lat": 22.294, "lng": 114.172, "day": 1, "cat": "야경", "desc": "매일 밤 8시, 세계 최대 규모 상설 빛의 쇼 15분"}, {"name": "아쿠아 바 (AQUA)", "lat": 22.2995, "lng": 114.172, "day": 1, "cat": "야경", "desc": "침사추이 15층 오픈 테라스, 하버 야경 칵테일"}, {"name": "아이 스퀘어 루프탑", "lat": 22.298, "lng": 114.1722, "day": 1, "cat": "야경", "desc": "침사추이 고층 루프탑 바, 홍콩섬 야경"}, {"name": "오픈탑 버스 야간투어", "lat": 22.294, "lng": 114.168, "day": 1, "cat": "야경", "desc": "2층 오픈 버스로 90분 야경 투어"}, {"name": "템플 스트리트 야시장", "lat": 22.3076, "lng": 114.1697, "day": 1, "cat": "야경", "desc": "자정까지 운영, 야식+기념품 쇼핑"}, {"name": "딩딩 트램", "lat": 22.2869, "lng": 114.15, "day": 2, "cat": "관광", "desc": "세계 최장 야외 노면전차, 2층 앞자리 추천"}, {"name": "만모 사원", "lat": 22.2836, "lng": 114.1499, "day": 2, "cat": "관광", "desc": "1800년대 도교 사원, 향 연기 이국적 분위기"}, {"name": "소호 벽화거리", "lat": 22.2828, "lng": 114.1527, "day": 2, "cat": "관광", "desc": "힙한 예술 골목, 포토스팟"}, {"name": "미드레벨 에스컬레이터", "lat": 22.2825, "lng": 114.1537, "day": 2, "cat": "관광", "desc": "세계 최장 야외 커버 에스컬레이터 800m"}, {"name": "센트럴 마켓", "lat": 22.2845, "lng": 114.1551, "day": 2, "cat": "관광", "desc": "역사 건물 재단장, 에그와플 맛집 입점"}, {"name": "타이 퀀 (Tai Kwun)", "lat": 22.2815, "lng": 114.1545, "day": 2, "cat": "관광", "desc": "과거 경찰서·교도소→문화예술센터"}, {"name": "홍콩 공원", "lat": 22.2798, "lng": 114.1602, "day": 2, "cat": "관광", "desc": "도심 속 열대 조류·온실 관람"}, {"name": "빅토리아 피크", "lat": 22.2759, "lng": 114.1455, "day": 2, "cat": "관광", "desc": "홍콩 최고 전망, 스카이 테라스 428 HKD 88"}, {"name": "K11 뮤제아", "lat": 22.296, "lng": 114.1719, "day": 2, "cat": "관광", "desc": "예술+쇼핑 복합 문화공간"}, {"name": "홍콩 관람차", "lat": 22.2864, "lng": 114.1587, "day": 2, "cat": "관광", "desc": "센트럴 하버프런트 60m 관람차, 야간 하버 뷰"}, {"name": "란퐁유엔 본점", "lat": 22.2845, "lng": 114.1536, "day": 2, "cat": "맛집", "desc": "1952년 창업, 홍콩 밀크티+프렌치 토스트 원조"}, {"name": "싱흥유엔 차찬탱", "lat": 22.2825, "lng": 114.154, "day": 2, "cat": "맛집", "desc": "소호 숨은 로컬 차찬탱, 달걀 샌드위치+밀크티"}, {"name": "베이크 하우스", "lat": 22.2838, "lng": 114.1527, "day": 2, "cat": "맛집", "desc": "포르투갈식 에그타르트, 항상 줄 서는 핫플"}, {"name": "타이청 베이커리", "lat": 22.282, "lng": 114.154, "day": 2, "cat": "맛집", "desc": "전 홍콩 총독이 즐긴 에그타르트, 70년 전통"}, {"name": "침차이키 완탕면", "lat": 22.283, "lng": 114.1555, "day": 2, "cat": "맛집", "desc": "센트럴 로컬 완탕면, 진한 육수+탱글 새우 완탕"}, {"name": "베이크드 (Baked)", "lat": 22.2832, "lng": 114.1541, "day": 2, "cat": "맛집", "desc": "소호·완차이, 사워도우 토스트+아보카도 유러피언 브런치"}, {"name": "완차이 더 유안", "lat": 22.2776, "lng": 114.1729, "day": 2, "cat": "맛집", "desc": "유자 소스 치킨 홍콩식 퓨전"}, {"name": "만다린 오리엔탈 애프터눈 티", "lat": 22.2811, "lng": 114.1585, "day": 2, "cat": "맛집", "desc": "홍콩 최고급 애프터눈 티 HKD 450~650"}, {"name": "페닌슐라 호텔 애프터눈 티", "lat": 22.2955, "lng": 114.1717, "day": 2, "cat": "맛집", "desc": "1928년 전통, 라이브 스트링 연주 애프터눈 티"}, {"name": "세바 루프탑 바 (SEVVA)", "lat": 22.281, "lng": 114.16, "day": 2, "cat": "야경", "desc": "프린스 빌딩 25층, 구 대법원+하버 동시 조망"}, {"name": "더 아이언 페어리스", "lat": 22.2819, "lng": 114.1538, "day": 2, "cat": "야경", "desc": "재즈 라이브 바, 나비 장식, 21:30 보컬 공연"}, {"name": "폭스글로브", "lat": 22.2808, "lng": 114.158, "day": 2, "cat": "야경", "desc": "우산가게 위장 비밀 입구 위스키·칵테일 바"}, {"name": "란콰이퐁 클럽 거리", "lat": 22.281, "lng": 114.1555, "day": 2, "cat": "야경", "desc": "부메랑·드래곤-i·AER 등 클럽 밀집, 새벽 4시까지"}, {"name": "란콰이퐁 펍 크롤", "lat": 22.2812, "lng": 114.1553, "day": 2, "cat": "야경", "desc": "3시간 바 3곳+클럽 VIP 입장 패키지"}, {"name": "옹핑 360 케이블카", "lat": 22.2572, "lng": 113.955, "day": 3, "cat": "관광", "desc": "크리스털 캐빈 사전 예약, 란타우 섬 파노라마"}, {"name": "옹핑 빌리지", "lat": 22.2552, "lng": 113.905, "day": 3, "cat": "관광", "desc": "케이블카 하차 후 전통 문화 거리"}, {"name": "천단대불", "lat": 22.2538, "lng": 113.905, "day": 3, "cat": "관광", "desc": "268계단 등반, 거대 청동 불상 인증샷"}, {"name": "포린 사원", "lat": 22.2548, "lng": 113.9052, "day": 3, "cat": "관광", "desc": "불교 채식 런치 세트 HKD 100, 천단대불 옆"}, {"name": "타이오 어촌 마을", "lat": 22.2537, "lng": 113.8618, "day": 3, "cat": "관광", "desc": "보트 투어·핑크돌고래·수상가옥·새우페이스트 와플"}, {"name": "시티게이트 아울렛", "lat": 22.31, "lng": 113.944, "day": 3, "cat": "관광", "desc": "란타우 복귀 길 쇼핑 아울렛"}, {"name": "홍콩 디즈니랜드", "lat": 22.313, "lng": 114.0413, "day": 3, "cat": "관광", "desc": "타이오 대신 선택 가능한 풀데이 대안"}, {"name": "청차우 섬", "lat": 22.21, "lng": 114.028, "day": 3, "cat": "관광", "desc": "차 없는 섬, 팍타이 사원·해안 트레일·어묵 특산"}, {"name": "라마 섬", "lat": 22.2072, "lng": 114.1247, "day": 3, "cat": "관광", "desc": "해산물 레스토랑 골목, 센트럴 페리 30분"}, {"name": "포린사원 채식 레스토랑", "lat": 22.2548, "lng": 113.9055, "day": 3, "cat": "맛집", "desc": "불교식 채식 코스, HKD 100 세트 메뉴"}, {"name": "카우키 레스토랑", "lat": 22.2822, "lng": 114.153, "day": 3, "cat": "맛집", "desc": "63년 전통 카레 쇠고기 완탕면, 노포"}, {"name": "허유화 망고 디저트", "lat": 22.282, "lng": 114.158, "day": 3, "cat": "맛집", "desc": "망고 포멜로 사고, 홍콩 대표 디저트"}, {"name": "카이탁 크루즈 터미널 옥상", "lat": 22.3077, "lng": 114.2126, "day": 3, "cat": "야경", "desc": "무료 개방 옥상, 구룡 동부 해안 야경"}, {"name": "아쿠아루나 크루즈", "lat": 22.2872, "lng": 114.158, "day": 3, "cat": "야경", "desc": "전통 정크선 크루즈, 심포니 오브 라이트 포함"}, {"name": "럭셔리 요트 크루즈", "lat": 22.2875, "lng": 114.1583, "day": 3, "cat": "야경", "desc": "소규모 오픈 바 요트, HKD 300~500, 하버 일주"}, {"name": "치린 수도원", "lat": 22.3346, "lng": 114.2, "day": 4, "cat": "관광", "desc": "당나라 양식 목조 건물, 이른 아침 방문 추천"}, {"name": "난리안 정원", "lat": 22.3351, "lng": 114.2013, "day": 4, "cat": "관광", "desc": "중국식 정원·연꽃 연못, 치린 수도원 바로 옆"}, {"name": "웡타이신 사원", "lat": 22.3423, "lng": 114.1935, "day": 4, "cat": "관광", "desc": "홍콩 최유명 도교 사원, 점괘 체험 가능"}, {"name": "꽃시장", "lat": 22.3253, "lng": 114.1672, "day": 4, "cat": "관광", "desc": "몽콕 꽃 전문 상점 거리"}, {"name": "금붕어 시장", "lat": 22.3241, "lng": 114.1687, "day": 4, "cat": "관광", "desc": "관상어 전문 상점 거리"}, {"name": "새 시장 (Bird Garden)", "lat": 22.3265, "lng": 114.1703, "day": 4, "cat": "관광", "desc": "관상조 전문 시장"}, {"name": "레이디스 마켓", "lat": 22.3192, "lng": 114.1706, "day": 4, "cat": "관광", "desc": "몽콕 대표 저가 쇼핑 거리"}, {"name": "삼수이포 복명가", "lat": 22.33, "lng": 114.162, "day": 4, "cat": "관광", "desc": "전자부품·원단·저가 쇼핑, 홍콩 최대 저가 골목"}, {"name": "몽콕 네온 사인 거리", "lat": 22.321, "lng": 114.1695, "day": 4, "cat": "관광", "desc": "1960~70년대 홍콩 영화 배경 레트로 네온사인"}, {"name": "만불사 (샤틴)", "lat": 22.382, "lng": 114.1876, "day": 4, "cat": "관광", "desc": "1만 3천 개 불상, 황금 나한상 계단 독특한 분위기"}, {"name": "얏록 광동 바베큐", "lat": 22.2824, "lng": 114.1539, "day": 4, "cat": "맛집", "desc": "미슐랭 1스타, 거위+돼지 바베큐 플레이트"}, {"name": "쿵워 두부 팩토리", "lat": 22.3308, "lng": 114.161, "day": 4, "cat": "맛집", "desc": "60년 전통 두부 푸딩 HKD 10, 최고 가성비"}, {"name": "라우섬키 누들", "lat": 22.3295, "lng": 114.1615, "day": 4, "cat": "맛집", "desc": "대나무 장대 전통 반죽, 3대째 가업 완탕면"}, {"name": "통헝기 밀크 푸딩", "lat": 22.32, "lng": 114.17, "day": 4, "cat": "맛집", "desc": "더블 스킨 밀크 푸딩, 홍콩 전통 디저트"}, {"name": "만케이 카트 누들", "lat": 22.3185, "lng": 114.171, "day": 4, "cat": "맛집", "desc": "면·육수·토핑 직접 선택하는 홍콩식 국수"}, {"name": "오존 (OZONE) ICC 118층", "lat": 22.3034, "lng": 114.1604, "day": 4, "cat": "야경", "desc": "세계 최고층 루프탑 바 490m, 드레스코드 필수"}, {"name": "다크사이드 (DarkSide)", "lat": 22.2964, "lng": 114.1726, "day": 4, "cat": "야경", "desc": "로즈우드 호텔 재즈 라이브, 21:30 공연"}, {"name": "해피밸리 경마장", "lat": 22.2692, "lng": 114.1826, "day": 4, "cat": "야경", "desc": "수요일만 야간 경마 운영, 홍콩 로컬 최고 이벤트"}, {"name": "샤프 아일랜드 모세의 길", "lat": 22.3623, "lng": 114.3097, "day": 5, "cat": "관광", "desc": "썰물 때만 열리는 바닷길, 조수 시간 필수 확인"}, {"name": "익청빌딩 (몬스터 빌딩)", "lat": 22.287, "lng": 114.22, "day": 5, "cat": "관광", "desc": "5개 건물 연결 초고밀도 주거단지, 조용히 방문"}, {"name": "초이훙 에스테이트", "lat": 22.3348, "lng": 114.2085, "day": 5, "cat": "관광", "desc": "무지개 컬러풀 농구장, 인증샷 포토스팟"}, {"name": "리펄스 베이 비치", "lat": 22.2364, "lng": 114.1964, "day": 5, "cat": "관광", "desc": "홍콩섬 남부 아름다운 해변, 현지인 힐링 스팟"}, {"name": "스탠리 마켓", "lat": 22.2183, "lng": 114.2138, "day": 5, "cat": "관광", "desc": "기념품·의류 쇼핑 시장"}, {"name": "홍콩 오션파크", "lat": 22.2476, "lng": 114.1736, "day": 5, "cat": "관광", "desc": "수족관·놀이기구·판다·마린월드, 풀데이 가능"}, {"name": "드래곤스 백 하이킹", "lat": 22.2448, "lng": 114.2328, "day": 5, "cat": "관광", "desc": "홍콩섬 최고 하이킹 코스, 2~3시간, 시완 비치 연결"}, {"name": "가든 힐 뷰포인트", "lat": 22.3279, "lng": 114.1637, "day": 5, "cat": "관광", "desc": "구룡 숨은 노을 뷰포인트, 무료, 현지인 전용"}, {"name": "트러스티 콘지 킹", "lat": 22.278, "lng": 114.173, "day": 5, "cat": "맛집", "desc": "15년 연속 미슐랭 빕 구르망, 생선 육수 기반 죽"}, {"name": "미심황궁 시티홀", "lat": 22.2823, "lng": 114.1588, "day": 5, "cat": "맛집", "desc": "수레 딤섬 전통 방식, 홍콩 클래식 딤섬 분위기"}, {"name": "촨키 해산물 (사이쿵)", "lat": 22.3817, "lng": 114.2727, "day": 5, "cat": "맛집", "desc": "수조에서 직접 고른 킹크랩·랍스터 즉석 요리"}, {"name": "Qi House of Sichuan", "lat": 22.2775, "lng": 114.1735, "day": 5, "cat": "맛집", "desc": "미슐랭 1스타 사천 요리, 마라 소고기"}, {"name": "리틀 코브 에스프레소", "lat": 22.382, "lng": 114.2732, "day": 5, "cat": "맛집", "desc": "사이쿵 오션 뷰 브런치, 에그 베네딕트+스페셜티 커피"}, {"name": "룽킹힌 (미슐랭 3스타)", "lat": 22.2872, "lng": 114.1584, "day": 5, "cat": "맛집", "desc": "세계 최초 광둥 미슐랭 3스타, 포시즌스 호텔 4층"}, {"name": "앰버 (Amber) 미슐랭 2스타", "lat": 22.2815, "lng": 114.1542, "day": 5, "cat": "맛집", "desc": "란콰이퐁 호텔, 최고급 프렌치 파인다이닝"}, {"name": "서구룡 문화지구 프롬나드", "lat": 22.301, "lng": 114.1584, "day": 5, "cat": "야경", "desc": "무료 야간 산책, M+ 건물+하버 뷰"}, {"name": "완차이 호프웰 17층 (무료)", "lat": 22.2764, "lng": 114.1742, "day": 5, "cat": "야경", "desc": "무료 숨은 전망, 완차이역 D출구 도보 3분"}, {"name": "M+ 뮤지엄 야간 관람", "lat": 22.3015, "lng": 114.1596, "day": 5, "cat": "야경", "desc": "홍콩 최대 현대미술관, 목~토 21:00까지 야간 운영"}, {"name": "바 레온 (Bar Leone)", "lat": 22.3025, "lng": 114.16, "day": 5, "cat": "야경", "desc": "아시아 50 베스트 바 1위(2024), 예약 필수"}, {"name": "핑삼 헤리티지 트레일", "lat": 22.4487, "lng": 114.039, "day": 6, "cat": "관광", "desc": "당 씨 가문 조상 사당·탑·사원 연결 역사 트레일"}, {"name": "홍콩 습지 공원", "lat": 22.468, "lng": 114.006, "day": 6, "cat": "관광", "desc": "조류 및 습지 관찰, 핑삼 트레일 같은 방향"}, {"name": "해피밸리 경마 박물관", "lat": 22.2695, "lng": 114.183, "day": 6, "cat": "관광", "desc": "무료 관람, 홍콩 경마 역사 전시"}, {"name": "마완 섬", "lat": 22.3589, "lng": 114.0594, "day": 6, "cat": "관광", "desc": "칭마 대교 뷰·노을 비치, 로맨틱 석양 명소"}, {"name": "무이키 콘지", "lat": 22.445, "lng": 114.036, "day": 6, "cat": "맛집", "desc": "위안랑 현지인 죽 맛집"}, {"name": "포키 레스토랑", "lat": 22.2865, "lng": 114.1499, "day": 6, "cat": "맛집", "desc": "셩완 로컬 차찬탱, 돼지갈비 덮밥+밀크티, 현금만"}, {"name": "힝키 레스토랑", "lat": 22.283, "lng": 114.156, "day": 6, "cat": "맛집", "desc": "공항 출발 전 피쉬볼 꼬치+에그 토스트"}, {"name": "루가드 로드 야경 트레일", "lat": 22.2757, "lng": 114.1412, "day": 6, "cat": "야경", "desc": "빅토리아 피크 무료 야경 트레일, 귀국 비행 늦을 때"}, {"name": "세나도 광장 (마카오)", "lat": 22.194, "lng": 113.539, "day": 7, "cat": "관광", "desc": "마카오 중심 광장, 포르투갈식 물결 바닥 타일"}, {"name": "성 바울 성당 유적 (마카오)", "lat": 22.1977, "lng": 113.5406, "day": 7, "cat": "관광", "desc": "마카오 상징 유네스코 유산, 17세기 성당 파사드"}, {"name": "타이파 빌리지 (마카오)", "lat": 22.1578, "lng": 113.5548, "day": 7, "cat": "관광", "desc": "포르투갈풍 골목·카페·에그타르트 파스텔 드 나타"}, {"name": "베네치안 마카오", "lat": 22.1482, "lng": 113.5673, "day": 7, "cat": "관광", "desc": "세계 최대 카지노 리조트, 실내 운하 곤돌라 체험"}, {"name": "그랜드 리스보아 야경 (마카오)", "lat": 22.1936, "lng": 113.5461, "day": 7, "cat": "야경", "desc": "마카오 상징 황금 연꽃 모양 카지노 타워 야경"}, {"name": "마카오 타워 번지점프", "lat": 22.1734, "lng": 113.5561, "day": 7, "cat": "관광", "desc": "세계 최고 번지점프 233m, 타워 전망대도 운영"}];
+const DC={"1": "#E74C3C", "2": "#E67E22", "3": "#27AE60", "4": "#2980B9", "5": "#8E44AD", "6": "#16A085", "7": "#C0392B"};
+const DN={"1": "침사추이·구룡", "2": "홍콩섬 센트럴", "3": "란타우 섬", "4": "구룡 동부·몽콕", "5": "포토스팟·남부", "6": "위안랑·귀국", "7": "보너스: 마카오"};
+const CI={"관광": "🏛️", "맛집": "🍜", "야경": "🌃"};
+
+let cDay=0,cCat='',mkrs=[],ss='c';
+
+/* ─── Leaflet 동적 로드 ─── */
+function loadLeaflet(cb){
+  if(window.L&&window.L.map){cb();return;}
+  const css=document.createElement('link');
+  css.rel='stylesheet';
+  // jsDelivr CDN 사용 (안정적)
+  css.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css';
+  document.head.appendChild(css);
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js';
+  s.onload=cb;
+  s.onerror=function(){
+    // fallback: unpkg
+    const s2=document.createElement('script');
+    s2.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s2.onload=cb;
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s);
+}
+
+let map;
+function initMap(){
+  const hh=document.getElementById('hd').offsetHeight;
+  map=L.map('map',{center:[22.32,114.17],zoom:12,zoomControl:false,attributionControl:false});
+  // 기본 OSM 타일 (가장 안정적)
+  const osm=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'});
+  // 다크 타일 (CartoDB)
+  const dark=L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19,attribution:'© CARTO'});
+  dark.on('tileerror',function(){osm.addTo(map);});
+  dark.addTo(map);
+  L.control.zoom({position:'topright'}).addTo(map);
+  L.control.attribution({position:'bottomleft',prefix:'© CARTO / OSM'}).addTo(map);
+  map.on('click',function(){if(ss!=='c')setSS('c');document.getElementById('lp').classList.remove('open');});
+  renderMkrs();
+}
+
+window.addEventListener('load',function(){
+  loadLeaflet(initMap);
+});
+
+/* ─── 마커 ─── */
+function mkIcon(day,cat){
+  const c=DC[day]||'#888', e=CI[cat]||'📍';
+  return L.divIcon({
+    className:'',
+    html:'<div style="background:'+c+';width:32px;height:32px;border-radius:50%;border:2.5px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,.5)">'+e+'</div>',
+    iconSize:[32,32],iconAnchor:[16,16],popupAnchor:[0,-18]
+  });
+}
+function renderMkrs(){
+  mkrs.forEach(m=>map.removeLayer(m.m));
+  mkrs=[];
+  const flt=L_DATA.filter(l=>(cDay===0||l.day===cDay)&&(cCat===''||l.cat===cCat));
+  flt.forEach(loc=>{
+    const m=L.marker([loc.lat,loc.lng],{icon:mkIcon(loc.day,loc.cat)});
+    const c=DC[loc.day],e=CI[loc.cat]||'📍';
+    const dl=loc.day===7?'🎰 마카오':'Day '+loc.day;
+    m.bindPopup(
+      '<div class="pt2">'+e+' '+loc.name+'</div>'+
+      '<div><span class="pb" style="background:'+c+'25;color:'+c+';border:1px solid '+c+'">'+dl+'</span>'+
+      '<span class="pb" style="background:#1e2a1a;color:#6fcf72">'+loc.cat+'</span></div>'+
+      '<div class="pdesc">'+loc.desc+'</div>',
+      {maxWidth:240}
+    );
+    m.addTo(map);
+    mkrs.push({m:m,loc:loc});
+  });
+  document.getElementById('shc').textContent=flt.length+'곳 '+(ss==='c'?'↑':'↓');
+  renderList(flt);
+}
+
+/* ─── 목록 렌더 ─── */
+function renderList(flt){
+  const g={};
+  flt.forEach(l=>{if(!g[l.day])g[l.day]=[];g[l.day].push(l);});
+  let h='';
+  Object.keys(g).sort((a,b)=>+a-+b).forEach(d=>{
+    const c=DC[d];
+    const dl=d==='7'?'🎰 보너스 — 마카오 당일치기':'Day '+d+' — '+DN[d];
+    h+='<div class="dl"><div class="dd" style="background:'+c+'"></div><span style="color:'+c+'">'+dl+'</span></div>';
+    g[d].forEach(loc=>{
+      const e=CI[loc.cat]||'📍',c2=DC[loc.day];
+      const cc=loc.cat==='관광'?'#3498db':loc.cat==='맛집'?'#e67e22':'#9b59b6';
+      const tl=d==='7'?'보너스':'Day '+loc.day;
+      h+='<div class="pc" onclick="flyTo('+loc.lat+','+loc.lng+','+loc.day+')">'+
+        '<div class="pi" style="background:'+c2+'20">'+e+'</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div class="pn">'+loc.name+'</div>'+
+          '<div class="pm">'+
+            '<span class="pt" style="background:'+c2+'20;color:'+c2+'">'+tl+'</span>'+
+            '<span class="pt" style="background:'+cc+'20;color:'+cc+'">'+loc.cat+'</span>'+
+          '</div>'+
+          '<div class="pd">'+loc.desc+'</div>'+
+        '</div>'+
+        '<div class="pa">›</div>'+
+      '</div>';
+    });
+  });
+  document.getElementById('pl').innerHTML=h||'<div style="text-align:center;color:#8fa3b1;padding:30px;font-size:13px">해당 장소가 없습니다</div>';
+  const dt=cDay===0?'전체 장소':cDay===7?'🎰 마카오':'Day '+cDay+' '+DN[cDay];
+  document.getElementById('sht').textContent='📍 '+dt+(cCat?' · '+cCat:'');
+}
+
+function flyTo(lat,lng,day){
+  setSS('c');
+  setTimeout(function(){
+    map.flyTo([lat,lng],16,{duration:1.0});
+    const f=mkrs.find(m=>m.loc.lat===lat&&m.loc.lng===lng);
+    if(f)setTimeout(function(){f.m.openPopup();},1100);
+  },200);
+}
+
+/* ─── 필터 ─── */
+function fDay(d){
+  cDay=d;
+  document.querySelectorAll('.dp').forEach((b,i)=>b.classList.toggle('on',i===d));
+  renderMkrs();
+  if(d===7){map.flyTo([22.18,113.55],13,{duration:1.2});}
+  else if(d>0){
+    const ls=L_DATA.filter(l=>l.day===d);
+    if(ls.length)map.fitBounds(L.latLngBounds(ls.map(l=>[l.lat,l.lng])),{padding:[60,60]});
+  } else{map.setView([22.32,114.17],12);}
+}
+function fCat(cat,e){
+  if(e)e.stopPropagation();
+  cCat=cat;
+  document.querySelectorAll('.cp').forEach(b=>b.classList.toggle('on',(cat===''&&b.textContent==='전체')||(cat!==''&&b.textContent.includes(cat))));
+  renderMkrs();
+}
+
+/* ─── 바텀시트 ─── */
+function setSS(s){
+  ss=s;
+  const el=document.getElementById('sh');
+  el.className=s;
+  const c=document.getElementById('shc');
+  c.textContent=c.textContent.replace(/[↑↓]/,s==='c'?'↑':'↓');
+}
+function cyc(){setSS(ss==='c'?'h':ss==='h'?'f':'c');}
+
+let ty=0;
+document.getElementById('sha').addEventListener('touchstart',e=>{ty=e.touches[0].clientY;},{passive:true});
+document.getElementById('sha').addEventListener('touchend',e=>{
+  const d=ty-e.changedTouches[0].clientY;
+  if(Math.abs(d)>25)setSS(d>0?(ss==='c'?'h':'f'):(ss==='f'?'h':'c'));
+},{passive:true});
+
+/* ─── 검색 ─── */
+function oSrc(){document.getElementById('so').classList.add('open');setTimeout(()=>document.getElementById('si').focus(),150);}
+function cSrc(){document.getElementById('so').classList.remove('open');document.getElementById('si').value='';document.getElementById('sr').innerHTML='<div class="sh">예: 딤섬 · 야경 · 미슐랭 · 마카오</div>';}
+function dSrc(){
+  const q=document.getElementById('si').value.trim().toLowerCase();
+  if(!q){document.getElementById('sr').innerHTML='<div class="sh">예: 딤섬 · 야경 · 미슐랭 · 마카오</div>';return;}
+  const rs=L_DATA.filter(l=>l.name.toLowerCase().includes(q)||l.desc.toLowerCase().includes(q)||l.cat.includes(q)||DN[l.day].includes(q));
+  let h=rs.length===0?'<div style="text-align:center;color:#8fa3b1;padding:40px;font-size:14px">🔍 결과가 없습니다</div>':'<div class="sh">'+rs.length+'개 결과</div>';
+  rs.forEach(loc=>{
+    const c=DC[loc.day],e=CI[loc.cat]||'📍';
+    const cc=loc.cat==='관광'?'#3498db':loc.cat==='맛집'?'#e67e22':'#9b59b6';
+    const tl=loc.day===7?'보너스':'Day '+loc.day;
+    h+='<div class="pc" onclick="sSrc('+loc.lat+','+loc.lng+','+loc.day+')">'+
+      '<div class="pi" style="background:'+c+'20">'+e+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="pn">'+loc.name+'</div>'+
+        '<div class="pm"><span class="pt" style="background:'+c+'20;color:'+c+'">'+tl+'</span><span class="pt" style="background:'+cc+'20;color:'+cc+'">'+loc.cat+'</span></div>'+
+        '<div class="pd">'+loc.desc+'</div>'+
+      '</div>'+
+      '<div class="pa">›</div>'+
+    '</div>';
+  });
+  document.getElementById('sr').innerHTML=h;
+}
+function sSrc(lat,lng,day){
+  cSrc();
+  setTimeout(function(){
+    map.flyTo([lat,lng],16,{duration:1.0});
+    const f=mkrs.find(m=>m.loc.lat===lat&&m.loc.lng===lng);
+    if(f)setTimeout(function(){f.m.openPopup();},1100);
+  },200);
+}
+function tLeg(){document.getElementById('lp').classList.toggle('open');}
+</script>
+</body>
+</html>
